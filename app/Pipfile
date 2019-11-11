@@ -16,6 +16,7 @@ flask-migrate = "*"
 flask-script = "*"
 pymysql = "*"
 cryptography = "*"
+flask-login = "*"
 
 [requires]
 python_version = "3.6"

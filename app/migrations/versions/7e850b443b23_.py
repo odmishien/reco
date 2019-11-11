@@ -37,6 +37,7 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
+    op.execute('alter table users change password password varchar(100) NOT NULL;')
     # ### end Alembic commands ###
 
 
