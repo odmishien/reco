@@ -84,6 +84,7 @@ def signup_post():
         error = 'そのユーザー名はすでに使われています'
 
     if error is not None:
+        print(error)
         flash(error, category='alert alert-danger')
         return redirect(url_for('signup_get'))
 
@@ -91,13 +92,13 @@ def signup_post():
     db.session.add(new_user)
     db.session.commit()
 
-    login_user(new_user)
     return redirect(url_for('index'))
 
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
-    return
+    logout_user()
+    return redirect(url_for('login_get'))
 
 @app.route('/upload', methods=['POST'])
 @login_required
@@ -160,8 +161,8 @@ def post_audio_to_speech_to_textAPI(filename):
         return speech_recognition_results
 
 @login_manager.user_loader
-def load_user(user):
-    return User.get(user_id)
+def user_loader(user_id):
+    return User.query.get(user_id)
 
 def make_response_for_client(result):
     response = {}

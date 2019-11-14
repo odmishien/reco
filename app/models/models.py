@@ -14,8 +14,20 @@ class User(db.Model, UserMixin):
     def __init__(self, name, password):
         self.name = name.title()
         self.password = password.title()
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
     def get_id(self):
-        return self.id
+        return unicode(self.id)
+
+    def __repr__(self):
+        return '<User %r>' % (self.username)
 
 class Log(db.Model):
     __tablename__ = "logs"
