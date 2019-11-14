@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 7e850b443b23
+Revision ID: 0bbebc6d7e5b
 Revises: 
-Create Date: 2019-11-10 14:50:46.668672
+Create Date: 2019-11-14 17:54:48.713382
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7e850b443b23'
+revision = '0bbebc6d7e5b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,13 +31,12 @@ def upgrade():
     )
     op.create_table('users',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('name', sa.Unicode(length=20), nullable=False),
-    sa.Column('password', sa.Unicode(length=20), nullable=False),
+    sa.Column('name', sa.String(length=20), nullable=False),
+    sa.Column('password', sa.String(length=100), nullable=False),
     sa.Column('registerd_at', sa.DATETIME(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
-    op.execute('alter table users change password password varchar(100) NOT NULL;')
     # ### end Alembic commands ###
 
 

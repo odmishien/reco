@@ -24,6 +24,7 @@ DEBUG_DATA_PATH = 'test_data/sound.json'
 
 app = Flask(__name__)
 app.secret_key = 'hoge'
+app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@mysql:3306/reco'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 init_db(app)
@@ -73,7 +74,7 @@ def signup_get():
 def signup_post():
     username = request.form['username']
     password = request.form['password']
-
+    print(username, password)
     error = None
 
     if not username:
@@ -89,6 +90,7 @@ def signup_post():
         return redirect(url_for('signup_get'))
 
     new_user = User(username, hash_pass(password))
+    print(new_user)
     db.session.add(new_user)
     db.session.commit()
 
