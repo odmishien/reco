@@ -1,6 +1,6 @@
 from database import db
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, DATETIME, JSON, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DATETIME, JSON, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 
@@ -35,16 +35,16 @@ class Log(db.Model):
     user_id = Column(Integer, nullable=False)
     topic = Column(JSON, nullable=False)
     posession = Column(JSON, nullable=False)
-    active_rate = Column(Integer, nullable=False)
+    active_rate = Column(Float, nullable=False)
     score = Column(JSON, nullable=False)
-    total_time = Column(Integer, nullable=False)
+    total_time = Column(Float, nullable=False)
     created_at = Column(DATETIME, default=datetime.now, nullable=False)
 
     def __init__(self, user_id, topic, posession, active_rate, score, total_time, created_at):
-        self.user_id = user_id.title()
-        self.topic = topic.title()
-        self.posession = posession.title()
-        self.active_rate = active_rate.title()
-        self.score = score.title()
-        self.total_time = total_time.title()
-        self.created_at = created_at.title()
+        self.user_id = user_id
+        self.topic = topic
+        self.posession = posession
+        self.active_rate = active_rate
+        self.score = score
+        self.total_time = total_time
+        self.created_at = created_at
