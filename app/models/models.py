@@ -1,19 +1,33 @@
 from database import db
-from sqlalchemy import Column, Integer, Unicode, DATETIME, JSON, ForeignKey
+from flask_login import UserMixin
+from sqlalchemy import Column, Integer, String, DATETIME, JSON, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Unicode(20), unique=True, nullable=False)
-    password = Column(Unicode(20), nullable=False)
+    name = Column(String(20), unique=True, nullable=False)
+    password = Column(String(100), nullable=False)
     registerd_at = Column(DATETIME, default=datetime.now, nullable=False)
 
-    def __init__(name, password, registerd_at):
-        self.name = name.title()
-        self.password = password.title()
-        self.registerd_at = registerd_at.title()
+    def __init__(self, name, password):
+        self.name = name
+        self.password = password
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.id
+
+    def __repr__(self):
+        return '<User %r>' % (self.name)
 
 class Log(db.Model):
     __tablename__ = "logs"
@@ -25,8 +39,8 @@ class Log(db.Model):
     score = Column(JSON, nullable=False)
     total_time = Column(Integer, nullable=False)
     created_at = Column(DATETIME, default=datetime.now, nullable=False)
-    
-    def __init__(user_id, topic, posession, active_rate, score, total_time, created_at):
+
+    def __init__(self, user_id, topic, posession, active_rate, score, total_time, created_at):
         self.user_id = user_id.title()
         self.topic = topic.title()
         self.posession = posession.title()

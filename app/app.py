@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required
 from ibm_watson import SpeechToTextV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from janome.tokenizer import Tokenizer
@@ -7,8 +8,11 @@ import datetime
 import os
 import re
 import collections
-from database import init_db
+import hashlib
+
+from database import init_db, db
 import models
+from models import User, Log
 
 ALLOWED_EXTENSIONS = ['mp3', 'flac', 'wav']
 ALLOWED_NOUN_KIND = ['サ変接続', '形容動詞語幹', '副詞可能', '一般', '固有名詞']
@@ -19,13 +23,20 @@ DEBUG_MODE = False
 DEBUG_DATA_PATH = 'test_data/sound.json'
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@172.24.0.2:3306/reco'
+app.secret_key = 'hoge'
+app.debug = True
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@mysql:3306/reco'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 init_db(app)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login_get'
 
 t = Tokenizer()
 
 @app.route('/')
+@login_required
 def index():
     return render_template("index.html")
 
@@ -35,7 +46,25 @@ def login_get():
 
 @app.route('/login', methods=['POST'])
 def login_post():
-    return
+    username = request.form['username']
+    password = request.form['password']
+
+    error = None
+    user = validate_user(username, password)
+
+    if not username:
+        error = 'ユーザー名を入力してください'
+    elif not password:
+        error = 'パスワードを入力してください'
+    elif not user:
+        error = 'ユーザ名またはパスワードが正しくありません'
+
+    if error is not None:
+        print(error)
+        flash(error, category='alert')
+        return redirect(url_for('login_get'))
+    login_user(user)
+    return redirect(url_for('index'))
 
 @app.route('/signup', methods=['GET'])
 def signup_get():
@@ -43,13 +72,38 @@ def signup_get():
 
 @app.route('/signup', methods=['POST'])
 def signup_post():
-    return
+    username = request.form['username']
+    password = request.form['password']
+    print(username, password)
+    error = None
 
-@app.route('/logout', methods=['POST'])
+    if not username:
+        error = 'ユーザー名を入力してください'
+    elif not password:
+        error = 'パスワードを入力してください'
+    elif User.query.filter_by(name=username).first():
+        error = 'そのユーザー名はすでに使われています'
+
+    if error is not None:
+        print(error)
+        flash(error, category='alert')
+        return redirect(url_for('signup_get'))
+
+    new_user = User(username, hash_pass(password))
+    print(new_user)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return redirect(url_for('index'))
+
+@app.route('/logout', methods=['GET'])
+@login_required
 def logout():
-    return
+    logout_user()
+    return redirect(url_for('login_get'))
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload():
     if DEBUG_MODE:
         with open(DEBUG_DATA_PATH, 'r') as f:
@@ -74,6 +128,7 @@ def upload():
     return redirect('/log/{json_id}'.format(json_id=json_id))
 
 @app.route('/log/<log_id>')
+@login_required
 def log(log_id):
     log_file_path = os.path.join(LOG_DIR, 'log_' + log_id + '.json')
     with open(log_file_path, 'r') as f:
@@ -81,6 +136,7 @@ def log(log_id):
     return render_template("log.html", res=res)
 
 @app.route('/overview')
+@login_required
 def overview():
     res = get_overview()
     return render_template("overview.html", res=res)
@@ -105,6 +161,10 @@ def post_audio_to_speech_to_textAPI(filename):
                 speaker_labels=True,
             ).get_result()
         return speech_recognition_results
+
+@login_manager.user_loader
+def user_loader(user_id):
+    return User.query.get(user_id)
 
 def make_response_for_client(result):
     response = {}
@@ -251,6 +311,19 @@ def get_overview():
             break
     overview["topics"] = top_topics
     return overview
+
+def hash_pass(password):
+    md5 = hashlib.md5()
+    md5.update(password.encode("UTF-8"))
+    return md5.hexdigest()
+
+def validate_user(username, password):
+    user = User.query.filter_by(name=username).first()
+    if not user:
+        return None
+    if user.password != hash_pass(password):
+        return None
+    return user
 
 if __name__ == "__main__":
     app.run()
