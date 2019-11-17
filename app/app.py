@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_login import LoginManager, login_user, login_required
+from flask_login import LoginManager, login_user, logout_user, login_required
 from ibm_watson import SpeechToTextV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from janome.tokenizer import Tokenizer
@@ -61,7 +61,7 @@ def login_post():
 
     if error is not None:
         print(error)
-        flash(error, category='alert alert-danger')
+        flash(error, category='alert')
         return redirect(url_for('login_get'))
     login_user(user)
     return redirect(url_for('index'))
@@ -86,7 +86,7 @@ def signup_post():
 
     if error is not None:
         print(error)
-        flash(error, category='alert alert-danger')
+        flash(error, category='alert')
         return redirect(url_for('signup_get'))
 
     new_user = User(username, hash_pass(password))
@@ -96,7 +96,7 @@ def signup_post():
 
     return redirect(url_for('index'))
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['GET'])
 @login_required
 def logout():
     logout_user()
