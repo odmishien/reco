@@ -24,6 +24,8 @@ body {
     background-image: url("../img/43081.jpg");
     background-size: cover;
     background-position: center 60%;
+    color: #2c3e50;
+
   }
 .bg-mask{
     height: 100%;

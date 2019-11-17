@@ -7,6 +7,13 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
+    {% with errors = get_flashed_messages(category_filter=['info']) %}
+      {% if errors %}
+        {% for message in errors %}
+          <div class="alert alert-success" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
     <h2>ログイン</h2>
     <form class="form-horizontal" action="/login" method="POST">
       <div class="form-group">

@@ -96,7 +96,7 @@ def signup_post():
     print(new_user)
     db.session.add(new_user)
     db.session.commit()
-
+    login_user(new_user)
     return redirect(url_for('index'))
 
 @app.route('/logout', methods=['GET'])

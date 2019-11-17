@@ -45,4 +45,11 @@
         </li>
       {% endif %}
     </ul>
+    <ul class="navbar-nav">
+      {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          Welcome {{ current_user.name }}
+        </li>
+      {% endif %}
+    </ul>
   </nav>
