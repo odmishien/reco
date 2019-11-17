@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 from ibm_watson import SpeechToTextV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from janome.tokenizer import Tokenizer
@@ -19,7 +19,7 @@ ALLOWED_NOUN_KIND = ['サ変接続', '形容動詞語幹', '副詞可能', '一�
 UPLOAD_DIR = 'audio_logs'
 LOG_DIR = 'log'
 TOPICS_NUM = 5
-DEBUG_MODE = False
+DEBUG_MODE = True
 DEBUG_DATA_PATH = 'test_data/sound.json'
 
 app = Flask(__name__)
@@ -68,7 +68,10 @@ def login_post():
 
 @app.route('/signup', methods=['GET'])
 def signup_get():
-    return render_template("signup.html")
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    else:
+        return render_template("signup.html")
 
 @app.route('/signup', methods=['POST'])
 def signup_post():
@@ -108,32 +111,40 @@ def upload():
     if DEBUG_MODE:
         with open(DEBUG_DATA_PATH, 'r') as f:
             result = json.load(f)
-        response = make_response_for_client(result)
+        log_id = parse_and_save_result(result)
+        return redirect('/log/{}'.format(log_id))
+
     else:
         audio = request.files['audio']
         if audio.filename == '':
             return redirect('/')
 
         if allowed_file(audio.filename):
-            saveFileName = datetime.datetime.now().strftime('%Y%m%d_%H%M%S') + '.' + audio.filename.rsplit('.', 1)[1].lower()
-            audio_path = os.path.join(UPLOAD_DIR, saveFileName)
+            raw_audio_file_name = datetime.datetime.now().strftime('%Y%m%d_%H%M%S') + '.' + audio.filename.rsplit('.', 1)[1].lower()
+            audio_path = os.path.join(UPLOAD_DIR, raw_audio_file_name)
             audio.save(audio_path)
             result = post_audio_to_speech_to_textAPI(audio_path)
-            response = make_response_for_client(result)
+            delete_raw_audio_file(audio_path)
+            log_id = parse_and_save_result(result)
+            return redirect('/log/{}'.format(log_id))
         else:
             return redirect('/')
-    save_path, json_id = get_save_path_and_id()
-    with open(save_path, 'w') as f:
-        json.dump(response, f, ensure_ascii=False)
-    return redirect('/log/{json_id}'.format(json_id=json_id))
 
 @app.route('/log/<log_id>')
 @login_required
 def log(log_id):
-    log_file_path = os.path.join(LOG_DIR, 'log_' + log_id + '.json')
-    with open(log_file_path, 'r') as f:
-        res = json.load(f)
-    return render_template("log.html", res=res)
+    log = get_log_by_id(log_id, current_user.get_id())
+    if not log:
+        abort(404)
+    else:
+        res = {}
+        res["topic"] = log.topic
+        res["posession"] = log.posession
+        res["active_rate"] = log.active_rate
+        res["score"] = log.score
+        res["total_time"] = log.total_time
+        res["created_at"] = log.created_at
+        return render_template("log.html", res=res)
 
 @app.route('/overview')
 @login_required
@@ -141,9 +152,13 @@ def overview():
     res = get_overview()
     return render_template("overview.html", res=res)
 
+@login_manager.user_loader
+def user_loader(user_id):
+    return User.query.get(user_id)
+
+# 便利メソッド
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 def post_audio_to_speech_to_textAPI(filename):
         authenticator = IAMAuthenticator(
@@ -162,12 +177,10 @@ def post_audio_to_speech_to_textAPI(filename):
             ).get_result()
         return speech_recognition_results
 
-@login_manager.user_loader
-def user_loader(user_id):
-    return User.query.get(user_id)
+def delete_raw_audio_file(filename):
+    os.remove(filename)
 
-def make_response_for_client(result):
-    response = {}
+def parse_and_save_result(result):
     sentences = {}
     pauses = {}
     pause_scores = {}
@@ -265,43 +278,34 @@ def make_response_for_client(result):
 
     active_rate = 1 - (total_pause / total_time)
 
-    response["topic"] = topic
-    response["possesion"] = posession_per_speaker
-    response["active_rate"] = active_rate
-    response["score"] = weighted_final_score
-    response["total_time"] = total_time
-    response["created_at"] = datetime.datetime.now().isoformat()
+    user_id = current_user.get_id()
+    created_at = datetime.datetime.now()
 
-    return response
+    log = Log(user_id, topic, posession_per_speaker, active_rate, weighted_final_score, total_time, created_at)
 
-def get_save_path_and_id():
-    files = os.listdir(LOG_DIR)
-    return os.path.join(LOG_DIR, 'log_' + str(len(files) + 1) + '.json'), str(len(files) + 1)
+    db.session.add(log)
+    db.session.commit()
+
+    return log.id
 
 def get_overview():
-    log_name_list = os.listdir(LOG_DIR)
-    tmp_array = [(re.search("[0-9]+", x).group(), x) for x in log_name_list]
-    tmp_array.sort(key=lambda x:(int(x[0])))
-    log_names = [x[1] for x in tmp_array]
-
     overview = {}
     overview["logs"] = []
     topics = []
     top_topics = []
 
-    for log_name in log_names:
-        log_name = os.path.join(LOG_DIR, log_name)
-        with open(log_name, 'r') as f:
-            log = json.load(f)
-        topics.extend(log["topic"])
+    logs = Log.query.filter_by(user_id=current_user.get_id()).all()
+
+    for log in logs:
+        topics.extend(log.topic)
         log_obj = {}
-        log_obj["active_rate"] = log["active_rate"]
-        data = log["score"]
+        log_obj["active_rate"] = log.active_rate
+        data = log.score
         s = sum(data)
         N = len(data)
         mean_score = s / N
         log_obj["score"] = mean_score
-        log_obj["created_at"] = log["created_at"]
+        log_obj["created_at"] = log.created_at
         overview["logs"].append(log_obj)
     c = collections.Counter(topics)
     for i in range(TOPICS_NUM):
@@ -324,6 +328,13 @@ def validate_user(username, password):
     if user.password != hash_pass(password):
         return None
     return user
+
+def get_log_by_id(log_id, user_id):
+    log = Log.query.filter_by(id=log_id).first()
+    if log.user_id == user_id:
+        return log
+    else:
+        return None
 
 if __name__ == "__main__":
     app.run()

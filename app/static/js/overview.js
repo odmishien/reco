@@ -28,107 +28,106 @@ obj.logs.forEach(function(value) {
   scores.push(Math.round(value.score * 100));
 });
 
-
 // ダミーデータ
 var lineData = {
-    labels: [...Array(obj.logs.length).keys()],
-    datasets: [{
-      label: '',
+  labels: [...Array.from(Array(obj.logs.length).keys()).map(i => i + 1)],
+  datasets: [
+    {
+      label: "",
       data: scores,
-      borderColor: '#E86560',
-      fill: false,
-    }]
-  };
+      borderColor: "#E86560",
+      fill: false
+    }
+  ]
+};
 
 var pieData = {
-  labels: ['conversation','silence'],
-  datasets: [{
-    data: [talk, 100 - talk],
-    backgroundColor: ['#E86560', '#0064b3']
-  }]
+  labels: ["conversation", "silence"],
+  datasets: [
+    {
+      data: [talk, 100 - talk],
+      backgroundColor: ["#E86560", "#0064b3"]
+    }
+  ]
 };
 
 //データの取得
 
 var options = {
-    scales: {
-        yAxes: [
-          {
-            scaleLabel: {
-              display: true,
-              labelString: "Score",              
-              fontSize: 14,
-              fontColor: "#d0d2ff",
-              
-
-            },
-            ticks: {
-                suggestedMin: 0, 
-                siggestedMax: 100,
-                stepSize: 10,
-                fontColor: "#d0d2ff",
-            },
-            gridLines: {
-              // color: "#d0d2ff"
-              color: "#105E7F"
-            }
+  scales: {
+    yAxes: [
+      {
+        scaleLabel: {
+          display: true,
+          labelString: "Score",
+          fontSize: 14,
+          fontColor: "#d0d2ff"
+        },
+        ticks: {
+          suggestedMin: 0,
+          siggestedMax: 100,
+          stepSize: 10,
+          fontColor: "#d0d2ff"
+        },
+        gridLines: {
+          // color: "#d0d2ff"
+          color: "#105E7F"
         }
-      ],
-      xAxes: [
-        {
-          scaleLabel: {
-            display: true,
-            labelString: "ID",
-            fontsize: 14,
-            fontColor: "#d0d2ff"
-          },
-          ticks :{
-            fontColor: "#d0d2ff",
-           
-          },
-          gridLines: {
-            // color: "#d0d2ff"
-            color: "#105E7F"
-          }
+      }
+    ],
+    xAxes: [
+      {
+        scaleLabel: {
+          display: true,
+          labelString: "ID",
+          fontsize: 14,
+          fontColor: "#d0d2ff"
+        },
+        ticks: {
+          fontColor: "#d0d2ff"
+        },
+        gridLines: {
+          // color: "#d0d2ff"
+          color: "#105E7F"
         }
-      ]
-  
-    },
-    title : {
-        display: true,
-        text: "overview",
-        fontSize: 20,
-        fontColor: "#d0d2ff"
-    },
-    legend: {
-        display: false
-    }
+      }
+    ]
+  },
+  title: {
+    display: true,
+    text: "overview",
+    fontSize: 20,
+    fontColor: "#d0d2ff"
+  },
+  legend: {
+    display: false
+  }
 };
 
 var line = document.getElementById("line");
 var lineChart = new Chart(line, {
-    type: 'line',
-    data: lineData,
-    options: options
+  type: "line",
+  data: lineData,
+  options: options
 });
 
 var space = document.getElementById("space");
 var spaceChart = new Chart(space, {
-    type: 'doughnut',
-    data: pieData,
-    options: {
-        cutoutPercentage: 40,
-        responsive: true,
-        title: {
-          display: true,
-          fontSize: 20,
-          text: "Conversation Rate",
-          fontColor: "#d0d2ff"
-        },
-        legend: {
-          display: false
-        }
+  type: "doughnut",
+  data: pieData,
+  options: {
+    cutoutPercentage: 40,
+    responsive: true,
+    title: {
+      display: true,
+      fontSize: 20,
+      text: "Conversation Rate",
+      fontColor: "#d0d2ff"
+    },
+    legend: {
+      display: false
     }
+  }
 });
 
 // var domination = document.getElementById("domination");
@@ -150,13 +149,11 @@ var spaceChart = new Chart(space, {
 //     }
 // });
 
-document.getElementById('line').onclick = function(e) {
+document.getElementById("line").onclick = function(e) {
   var activePoints = lineChart.getElementsAtEvent(e);
-    if (activePoints.length > 0) {
-      var clickedElementIndex = activePoints[0]['_index'] + 1;
-      console.log(clickedElementIndex);
-      window.location.href = '/log/' +  clickedElementIndex;
-    }
-  
+  if (activePoints.length > 0) {
+    var clickedElementIndex = activePoints[0]["_index"] + 1;
+    console.log(clickedElementIndex);
+    window.location.href = "/log/" + clickedElementIndex;
+  }
 };
-
