@@ -5,4 +5,4 @@ RUN mkdir log audio_logs
 
 COPY Pipfile Pipfile.lock ./
 
-RUN pip install -U pip && pip install pipenv && pipenv install --system
+RUN pip install -U pip && pip install pipenv && pipenv install --system  --skip-lock

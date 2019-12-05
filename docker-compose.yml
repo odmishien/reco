@@ -19,7 +19,7 @@ services:
     links:
       - uwsgi
     ports:
-      - "4231:80"
+      - "80:80"
     environment:
       TZ: "Asia/Tokyo"
 
