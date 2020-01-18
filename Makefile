@@ -1,3 +1,6 @@
+.PHONY: deploy
+deploy:
+	sh ./scripts/deploy.sh
 .PHONY: run
 run:
 	docker-compose up

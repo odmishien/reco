@@ -23,7 +23,7 @@ DEBUG_MODE = False
 DEBUG_DATA_PATH = 'test_data/sound.json'
 
 app = Flask(__name__)
-app.secret_key = 'hoge'
+app.secret_key = os.urandom(24)
 app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@mysql:3306/reco'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -93,7 +93,6 @@ def signup_post():
         return redirect(url_for('signup_get'))
 
     new_user = User(username, hash_pass(password))
-    print(new_user)
     db.session.add(new_user)
     db.session.commit()
     login_user(new_user)
@@ -128,6 +127,8 @@ def upload():
             log_id = parse_and_save_result(result)
             return redirect('/log/{}'.format(log_id))
         else:
+            error = "アップロードできるファイル形式は mp3, flac, wav です。"
+            flash(error, category='alert')
             return redirect('/')
 
 @app.route('/log/<log_id>')

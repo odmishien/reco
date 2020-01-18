@@ -1,5 +1,12 @@
 {% include 'header.html' %}
   <body>
+    {% with errors = get_flashed_messages(category_filter=['alert']) %}
+      {% if errors %}
+        {% for message in errors %}
+          <div class="alert alert-danger" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
     <div id="content">
     <div class="container">
       <div class="jumbotron mt-4">
