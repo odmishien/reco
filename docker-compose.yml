@@ -14,7 +14,7 @@ services:
       driver: "awslogs"
       options:
         awslogs-region: "ap-northeast-1"
-        awslogs-group: "reco"
+        awslogs-group: "reco-app"
         tag: '{{ with split .ImageName ":" }}{{join . "_"}}{{end}}-{{.ID}}'
         awslogs-create-group: "true"
 
@@ -32,7 +32,7 @@ services:
       driver: "awslogs"
       options:
         awslogs-region: "ap-northeast-1"
-        awslogs-group: "reco"
+        awslogs-group: "reco-nginx"
         tag: '{{ with split .ImageName ":" }}{{join . "_"}}{{end}}-{{.ID}}'
         awslogs-create-group: "true"
 
