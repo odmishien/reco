@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, current_user, login_required
+from flask_socketio import SocketIO
 from ibm_watson import SpeechToTextV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from janome.tokenizer import Tokenizer
@@ -23,6 +24,7 @@ DEBUG_MODE = False
 DEBUG_DATA_PATH = 'test_data/sound.json'
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 app.secret_key = os.urandom(24)
 app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@mysql:3306/reco'
@@ -130,6 +132,16 @@ def upload():
             error = "アップロードできるファイル形式は mp3, flac, wav です。"
             flash(error, category='alert')
             return redirect('/')
+
+@socketio.on('connect', namespace='/record')
+@login_required
+def handle_connect():
+    print('connected!!')
+
+@socketio.on('send_audio', namespace='/record')
+@login_required
+def handle_send_audio(audio):
+    print(audio)
 
 @app.route('/log/<log_id>')
 @login_required
@@ -338,4 +350,4 @@ def get_log_by_id(log_id, user_id):
         return None
 
 if __name__ == "__main__":
-    app.run()
+    socketio.run()

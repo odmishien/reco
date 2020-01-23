@@ -40,9 +40,16 @@
       </div>
     </div>
   </div>
+  <div class="container">
+    <hr class="my-4 bg-light" />
+    <button onClick="startRecording()">start</button>
+    <button onClick="stopRecording()">stop</button>
+  </div>
 
   </body>
   <div class="rotating progress" id="progress"></div>
   <script src="https://rawgit.com/kimmobrunfeldt/progressbar.js/master/dist/progressbar.js"></script>
   <script src="../static/js/progress.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+  <script src="../static/js/recording.js"></script>
 </html>

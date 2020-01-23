@@ -10,13 +10,13 @@ services:
       - "3031:3031"
     environment:
       TZ: "Asia/Tokyo"
-    logging:
-      driver: "awslogs"
-      options:
-        awslogs-region: "ap-northeast-1"
-        awslogs-group: "reco-app"
-        tag: '{{ with split .ImageName ":" }}{{join . "_"}}{{end}}-{{.ID}}'
-        awslogs-create-group: "true"
+    # logging:
+    #   driver: "awslogs"
+    #   options:
+    #     awslogs-region: "ap-northeast-1"
+    #     awslogs-group: "reco-app"
+    #     tag: '{{ with split .ImageName ":" }}{{join . "_"}}{{end}}-{{.ID}}'
+    #     awslogs-create-group: "true"
 
   nginx:
     build: ./nginx
@@ -28,13 +28,13 @@ services:
       - "80:80"
     environment:
       TZ: "Asia/Tokyo"
-    logging:
-      driver: "awslogs"
-      options:
-        awslogs-region: "ap-northeast-1"
-        awslogs-group: "reco-nginx"
-        tag: '{{ with split .ImageName ":" }}{{join . "_"}}{{end}}-{{.ID}}'
-        awslogs-create-group: "true"
+    # logging:
+    #   driver: "awslogs"
+    #   options:
+    #     awslogs-region: "ap-northeast-1"
+    #     awslogs-group: "reco-nginx"
+    #     tag: '{{ with split .ImageName ":" }}{{join . "_"}}{{end}}-{{.ID}}'
+    #     awslogs-create-group: "true"
 
   mysql:
     build: ./mysql
